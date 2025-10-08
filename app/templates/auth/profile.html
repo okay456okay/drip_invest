@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}个人设置 - 定投管理工具{% endblock %}
+{% block page_title %}个人设置{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">个人信息</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="action" value="update_profile">
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">邮箱地址</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="webhook_url" class="form-label">企业微信Webhook URL</label>
+                        <input type="url" class="form-control" id="webhook_url" name="webhook_url" value="{{ user.webhook_url or '' }}" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...">
+                        <div class="form-text">用于接收定投提醒消息的企业微信群机器人webhook地址</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">更新个人信息</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">修改密码</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="action" value="change_password">
+                    
+                    <div class="mb-3">
+                        <label for="old_password" class="form-label">原密码</label>
+                        <input type="password" class="form-control" id="old_password" name="old_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">新密码</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required minlength="6">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">确认新密码</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="6">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning">修改密码</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">账户信息</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>用户名:</strong> {{ user.username }}</p>
+                <p><strong>邮箱:</strong> {{ user.email }}</p>
+                <p><strong>注册时间:</strong> {{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>最后更新:</strong> {{ user.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

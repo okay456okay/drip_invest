@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}仪表板 - 定投管理工具{% endblock %}
+{% block page_title %}仪表板{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 统计卡片 -->
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ reminders_count }}</h4>
+                        <p class="card-text">定投提醒</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-bell fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ records_count }}</h4>
+                        <p class="card-text">定投记录</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-journal-text fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ active_reminders|length }}</h4>
+                        <p class="card-text">活跃提醒</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-check-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">欢迎</h4>
+                        <p class="card-text">{{ session.username }}</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-person-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 最近的定投记录 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i> 最近的定投记录
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_records %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>股票代码</th>
+                                    <th>买入日期</th>
+                                    <th>金额</th>
+                                    <th>数量</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in recent_records %}
+                                <tr>
+                                    <td>{{ record.stock_code }}</td>
+                                    <td>{{ record.buy_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>¥{{ "%.2f"|format(record.amount) }}</td>
+                                    <td>{{ "%.4f"|format(record.quantity) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('record.index') }}" class="btn btn-outline-primary btn-sm">
+                            查看全部记录
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">暂无定投记录</p>
+                    <div class="text-center">
+                        <a href="{{ url_for('record.create') }}" class="btn btn-primary btn-sm">
+                            添加第一条记录
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 活跃的定投提醒 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-bell-fill"></i> 活跃的定投提醒
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_reminders %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>股票代码</th>
+                                    <th>定投金额</th>
+                                    <th>频率</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reminder in active_reminders %}
+                                <tr>
+                                    <td>{{ reminder.stock_code }}</td>
+                                    <td>¥{{ "%.2f"|format(reminder.amount) }}</td>
+                                    <td>
+                                        {% if reminder.frequency_type == 'monthly' %}
+                                            每月{{ reminder.frequency_value }}日
+                                        {% else %}
+                                            每周{{ ['', '一', '二', '三', '四', '五', '六', '日'][reminder.frequency_value] }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('reminder.index') }}" class="btn btn-outline-primary btn-sm">
+                            管理提醒
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">暂无活跃提醒</p>
+                    <div class="text-center">
+                        <a href="{{ url_for('reminder.create') }}" class="btn btn-primary btn-sm">
+                            创建第一个提醒
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 快速操作 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning"></i> 快速操作
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('reminder.create') }}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-plus-circle"></i> 创建定投提醒
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('record.create') }}" class="btn btn-outline-success w-100">
+                            <i class="bi bi-plus-circle"></i> 添加定投记录
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('analysis.cost_analysis') }}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-calculator"></i> 查看成本分析
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('analysis.profit_analysis') }}" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-graph-up"></i> 查看收益分析
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

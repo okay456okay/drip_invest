@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}添加定投记录 - 定投管理工具{% endblock %}
+{% block page_title %}添加定投记录{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">添加新的定投记录</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="target_id" class="form-label">投资标的 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="target_id" name="target_id" required>
+                            <option value="">请选择投资标的</option>
+                            {% for target in targets %}
+                            <option value="{{ target.id }}">{{ target.code }} - {{ target.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">请先在标的管理中添加投资标的</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="buy_date" class="form-label">买入日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="buy_date" name="buy_date" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">买入金额 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">¥</span>
+                                    <input type="number" class="form-control" id="amount" name="amount" 
+                                           step="0.01" min="0.01" placeholder="1000.00" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">买入数量 <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" 
+                                       step="0.0001" min="0.0001" placeholder="100.0000" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">买入价格 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">¥</span>
+                                    <input type="number" class="form-control" id="price" name="price" 
+                                           step="0.0001" min="0.0001" placeholder="10.0000" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fee" class="form-label">手续费</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">¥</span>
+                                    <input type="number" class="form-control" id="fee" name="fee" 
+                                           step="0.01" min="0" placeholder="0.00" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">备注</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                  placeholder="可选：记录本次定投的相关信息"></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('record.index') }}" class="btn btn-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">添加记录</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 设置默认日期为今天
+document.getElementById('buy_date').value = new Date().toISOString().split('T')[0];
+
+// 自动计算价格（金额/数量）
+document.getElementById('amount').addEventListener('input', calculatePrice);
+document.getElementById('quantity').addEventListener('input', calculatePrice);
+
+function calculatePrice() {
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+    
+    if (amount > 0 && quantity > 0) {
+        const price = amount / quantity;
+        document.getElementById('price').value = price.toFixed(4);
+    }
+}
+</script>
+{% endblock %}

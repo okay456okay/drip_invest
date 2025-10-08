@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}成本分析 - 定投管理工具{% endblock %}
+{% block page_title %}成本分析{% endblock %}
+
+{% block content %}
+<!-- 总体统计 -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">总投入金额</h5>
+                <h3 class="card-text">¥{{ "%.2f"|format(total_investment) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">总手续费</h5>
+                <h3 class="card-text">¥{{ "%.2f"|format(total_fee) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">总交易次数</h5>
+                <h3 class="card-text">{{ total_trades }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if cost_data %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">按股票代码分组的成本分析</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>股票代码</th>
+                        <th>总投入金额</th>
+                        <th>总持股数量</th>
+                        <th>平均成本价</th>
+                        <th>手续费</th>
+                        <th>交易次数</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in cost_data %}
+                    <tr>
+                        <td><strong>{{ data.stock_code }}</strong></td>
+                        <td>¥{{ "%.2f"|format(data.total_amount) }}</td>
+                        <td>{{ "%.4f"|format(data.total_quantity) }}</td>
+                        <td><strong>¥{{ "%.4f"|format(data.avg_cost) }}</strong></td>
+                        <td>¥{{ "%.2f"|format(data.total_fee) }}</td>
+                        <td>{{ data.trade_count }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" 
+                                    onclick="showDetails('{{ data.stock_code }}', {{ data.records|tojson }})">
+                                <i class="bi bi-eye"></i> 查看详情
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 详情模态框 -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">交易详情 - <span id="modalStockCode"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>买入日期</th>
+                                <th>买入金额</th>
+                                <th>买入数量</th>
+                                <th>买入价格</th>
+                                <th>手续费</th>
+                                <th>备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-calculator fs-1 text-muted"></i>
+    <h4 class="text-muted mt-3">暂无成本数据</h4>
+    <p class="text-muted">添加定投记录后即可查看成本分析</p>
+    <a href="{{ url_for('record.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> 添加定投记录
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showDetails(stockCode, records) {
+    document.getElementById('modalStockCode').textContent = stockCode;
+    
+    const tbody = document.getElementById('modalTableBody');
+    tbody.innerHTML = '';
+    
+    records.forEach(function(record) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${new Date(record.buy_date).toLocaleDateString()}</td>
+            <td>¥${parseFloat(record.amount).toFixed(2)}</td>
+            <td>${parseFloat(record.quantity).toFixed(4)}</td>
+            <td>¥${parseFloat(record.price).toFixed(4)}</td>
+            <td>¥${parseFloat(record.fee).toFixed(2)}</td>
+            <td>${record.notes || '-'}</td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    new bootstrap.Modal(document.getElementById('detailsModal')).show();
+}
+</script>
+{% endblock %}

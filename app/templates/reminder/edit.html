@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}编辑定投提醒 - 定投管理工具{% endblock %}
+{% block page_title %}编辑定投提醒{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">编辑定投提醒</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="target_id" class="form-label">投资标的 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="target_id" name="target_id" required>
+                            <option value="">请选择投资标的</option>
+                            {% for target in targets %}
+                            <option value="{{ target.id }}" {% if target.id == reminder.target_id %}selected{% endif %}>{{ target.code }} - {{ target.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">请先在标的管理中添加投资标的</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">定投金额 <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">¥</span>
+                            <input type="number" class="form-control" id="amount" name="amount" 
+                                   step="0.01" min="0.01" value="{{ reminder.amount }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">定投频率 <span class="text-danger">*</span></label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <select class="form-select" id="frequency_type" name="frequency_type" required>
+                                    <option value="">选择频率类型</option>
+                                    <option value="monthly" {% if reminder.frequency_type == 'monthly' %}selected{% endif %}>按月定投</option>
+                                    <option value="weekly" {% if reminder.frequency_type == 'weekly' %}selected{% endif %}>按周定投</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <select class="form-select" id="frequency_value" name="frequency_value" required>
+                                    <option value="">选择具体时间</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reminder_time" class="form-label">提醒时间 <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" id="reminder_time" name="reminder_time" 
+                               value="{{ reminder.reminder_time or '09:00' }}" required>
+                        <div class="form-text">设置每天提醒的具体时间</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('reminder.index') }}" class="btn btn-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">更新提醒</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('frequency_type').addEventListener('change', function() {
+    const frequencyValue = document.getElementById('frequency_value');
+    const type = this.value;
+    
+    frequencyValue.innerHTML = '<option value="">选择具体时间</option>';
+    
+    if (type === 'monthly') {
+        for (let i = 1; i <= 31; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `每月${i}日`;
+            if (i == {{ reminder.frequency_value }} && '{{ reminder.frequency_type }}' === 'monthly') {
+                option.selected = true;
+            }
+            frequencyValue.appendChild(option);
+        }
+    } else if (type === 'weekly') {
+        const weekdays = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+        for (let i = 1; i <= 7; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `每周${weekdays[i]}`;
+            if (i == {{ reminder.frequency_value }} && '{{ reminder.frequency_type }}' === 'weekly') {
+                option.selected = true;
+            }
+            frequencyValue.appendChild(option);
+        }
+    }
+});
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    const frequencyType = document.getElementById('frequency_type');
+    if (frequencyType.value) {
+        frequencyType.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

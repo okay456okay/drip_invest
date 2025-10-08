@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}定投提醒 - 定投管理工具{% endblock %}
+{% block page_title %}定投提醒管理{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('reminder.create') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> 创建提醒
+</a>
+{% endblock %}
+
+{% block content %}
+{% if reminders %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>股票代码</th>
+                <th>定投金额</th>
+                <th>频率</th>
+                <th>提醒时间</th>
+                <th>状态</th>
+                <th>下次执行</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reminder in reminders %}
+            <tr>
+                <td>{{ reminder.target.code if reminder.target else 'Unknown' }}</td>
+                <td>¥{{ "%.2f"|format(reminder.amount) }}</td>
+                <td>
+                    {% if reminder.frequency_type == 'monthly' %}
+                        每月{{ reminder.frequency_value }}日
+                    {% else %}
+                        每周{{ ['', '一', '二', '三', '四', '五', '六', '日'][reminder.frequency_value] }}
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge bg-info">{{ reminder.reminder_time or '09:00' }}</span>
+                </td>
+                <td>
+                    {% if reminder.is_active %}
+                        <span class="badge bg-success">启用</span>
+                    {% else %}
+                        <span class="badge bg-secondary">禁用</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span id="next-run-{{ reminder.id }}" class="text-muted">加载中...</span>
+                </td>
+                <td>{{ reminder.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ url_for('reminder.edit', reminder_id=reminder.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form method="POST" action="{{ url_for('reminder.toggle', reminder_id=reminder.id) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-outline-{{ 'warning' if reminder.is_active else 'success' }}">
+                                <i class="bi bi-{{ 'pause' if reminder.is_active else 'play' }}"></i>
+                            </button>
+                        </form>
+                        <button class="btn btn-outline-info" onclick="testWebhook()">
+                            <i class="bi bi-send"></i>
+                        </button>
+                        <button class="btn btn-outline-success" onclick="sendReminder({{ reminder.id }})">
+                            <i class="bi bi-bell"></i>
+                        </button>
+                        <form method="POST" action="{{ url_for('reminder.delete', reminder_id=reminder.id) }}" style="display: inline;" 
+                              onsubmit="return confirm('确定要删除这个定投提醒吗？')">
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-bell-slash fs-1 text-muted"></i>
+    <h4 class="text-muted mt-3">暂无定投提醒</h4>
+    <p class="text-muted">创建您的第一个定投提醒，开始您的定投之旅</p>
+    <a href="{{ url_for('reminder.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> 创建第一个提醒
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function testWebhook() {
+    fetch('/reminder/test-webhook', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', data.message);
+        } else {
+            showMessage('error', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('error', '测试失败，请重试');
+    });
+}
+
+function sendReminder(reminderId) {
+    fetch(`/reminder/send-reminder/${reminderId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', data.message);
+        } else {
+            showMessage('error', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('error', '发送失败，请重试');
+    });
+}
+
+function showMessage(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // 在页面顶部显示消息
+    const container = document.querySelector('.main-content');
+    container.insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // 3秒后自动消失
+    setTimeout(() => {
+        const alert = container.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 3000);
+}
+
+// 页面加载时加载定时任务状态
+document.addEventListener('DOMContentLoaded', function() {
+    loadJobStatuses();
+});
+
+function loadJobStatuses() {
+    {% for reminder in reminders %}
+    loadJobStatus({{ reminder.id }});
+    {% endfor %}
+}
+
+function loadJobStatus(reminderId) {
+    fetch(`/reminder/job-status/${reminderId}`)
+    .then(response => response.json())
+    .then(data => {
+        const element = document.getElementById(`next-run-${reminderId}`);
+        if (data.success && data.job_status) {
+            const nextRun = data.job_status.next_run_time;
+            if (nextRun) {
+                const date = new Date(nextRun);
+                element.textContent = date.toLocaleString('zh-CN');
+                element.className = 'text-success';
+            } else {
+                element.textContent = '无下次执行';
+                element.className = 'text-muted';
+            }
+        } else {
+            element.textContent = '任务未运行';
+            element.className = 'text-warning';
+        }
+    })
+    .catch(error => {
+        const element = document.getElementById(`next-run-${reminderId}`);
+        element.textContent = '加载失败';
+        element.className = 'text-danger';
+    });
+}
+</script>
+{% endblock %}

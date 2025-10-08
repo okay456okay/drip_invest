@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}定投记录 - 定投管理工具{% endblock %}
+{% block page_title %}定投记录管理{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('record.create') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> 添加记录
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- 筛选表单 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="stock_code" class="form-label">股票代码</label>
+                <input type="text" class="form-control" id="stock_code" name="stock_code" 
+                       value="{{ stock_code }}" placeholder="筛选股票代码">
+            </div>
+            <div class="col-md-3">
+                <label for="start_date" class="form-label">开始日期</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+            </div>
+            <div class="col-md-3">
+                <label for="end_date" class="form-label">结束日期</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary">筛选</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if records.items %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>股票代码</th>
+                <th>买入日期</th>
+                <th>买入金额</th>
+                <th>买入数量</th>
+                <th>买入价格</th>
+                <th>手续费</th>
+                <th>备注</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records.items %}
+            <tr>
+                <td>{{ record.target.code if record.target else 'Unknown' }}</td>
+                <td>{{ record.buy_date.strftime('%Y-%m-%d') }}</td>
+                <td>¥{{ "%.2f"|format(record.amount) }}</td>
+                <td>{{ "%.4f"|format(record.quantity) }}</td>
+                <td>¥{{ "%.4f"|format(record.price) }}</td>
+                <td>¥{{ "%.2f"|format(record.fee) }}</td>
+                <td>{{ record.notes or '-' }}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ url_for('record.edit', record_id=record.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form method="POST" action="{{ url_for('record.delete', record_id=record.id) }}" style="display: inline;" 
+                              onsubmit="return confirm('确定要删除这条定投记录吗？')">
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 分页 -->
+{% if records.pages > 1 %}
+<nav aria-label="分页导航">
+    <ul class="pagination justify-content-center">
+        {% if records.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('record.index', page=records.prev_num, stock_code=stock_code, start_date=start_date, end_date=end_date) }}">上一页</a>
+            </li>
+        {% endif %}
+        
+        {% for page_num in records.iter_pages() %}
+            {% if page_num %}
+                {% if page_num != records.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('record.index', page=page_num, stock_code=stock_code, start_date=start_date, end_date=end_date) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                {% endif %}
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if records.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('record.index', page=records.next_num, stock_code=stock_code, start_date=start_date, end_date=end_date) }}">下一页</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-journal-x fs-1 text-muted"></i>
+    <h4 class="text-muted mt-3">暂无定投记录</h4>
+    <p class="text-muted">开始记录您的定投交易，追踪投资进展</p>
+    <a href="{{ url_for('record.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> 添加第一条记录
+    </a>
+</div>
+{% endif %}
+{% endblock %}

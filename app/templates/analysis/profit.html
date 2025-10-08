@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}收益分析 - 定投管理工具{% endblock %}
+{% block page_title %}收益分析{% endblock %}
+
+{% block content %}
+<!-- 总体统计 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">总成本</h5>
+                <h3 class="card-text">¥{{ "%.2f"|format(total_cost) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">当前市值</h5>
+                <h3 class="card-text">¥{{ "%.2f"|format(total_market_value) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card {% if total_profit_loss >= 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
+            <div class="card-body">
+                <h5 class="card-title">盈亏金额</h5>
+                <h3 class="card-text">¥{{ "%.2f"|format(total_profit_loss) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card {% if total_profit_rate >= 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
+            <div class="card-body">
+                <h5 class="card-title">收益率</h5>
+                <h3 class="card-text">{{ "%.2f"|format(total_profit_rate) }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if profit_data %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">按股票代码分组的收益分析</h5>
+        <small class="text-muted">* 需要手动输入当前价格来计算收益</small>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>股票代码</th>
+                        <th>总成本</th>
+                        <th>持股数量</th>
+                        <th>平均成本</th>
+                        <th>当前价格</th>
+                        <th>当前市值</th>
+                        <th>盈亏金额</th>
+                        <th>收益率</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in profit_data %}
+                    <tr>
+                        <td><strong>{{ data.stock_code }}</strong></td>
+                        <td>¥{{ "%.2f"|format(data.total_amount) }}</td>
+                        <td>{{ "%.4f"|format(data.total_quantity) }}</td>
+                        <td>¥{{ "%.4f"|format(data.avg_cost) }}</td>
+                        <td>
+                            <span class="fw-bold">¥{{ "%.4f"|format(data.latest_price) }}</span>
+                            {% if data.price_date %}
+                            <br><small class="text-muted">更新于: {{ data.price_date.strftime('%Y-%m-%d') }}</small>
+                            {% endif %}
+                        </td>
+                        <td id="market_value_{{ loop.index }}">¥{{ "%.2f"|format(data.current_value) }}</td>
+                        <td id="profit_loss_{{ loop.index }}" 
+                            class="{% if data.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            ¥{{ "%.2f"|format(data.profit_loss) }}
+                        </td>
+                        <td id="profit_rate_{{ loop.index }}" 
+                            class="{% if data.return_rate >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ "%.2f"|format(data.return_rate) }}%
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" 
+                                    onclick="showDetails('{{ data.stock_code }}', {{ data.records|tojson }})">
+                                <i class="bi bi-eye"></i> 详情
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 详情模态框 -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">交易详情 - <span id="modalStockCode"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>买入日期</th>
+                                <th>买入金额</th>
+                                <th>买入数量</th>
+                                <th>买入价格</th>
+                                <th>手续费</th>
+                                <th>备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-graph-up fs-1 text-muted"></i>
+    <h4 class="text-muted mt-3">暂无收益数据</h4>
+    <p class="text-muted">添加定投记录后即可查看收益分析</p>
+    <a href="{{ url_for('record.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> 添加定投记录
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updatePrice(stockCode, index) {
+    const currentPrice = parseFloat(document.getElementById('price_' + index).value) || 0;
+    
+    if (currentPrice <= 0) {
+        alert('价格必须大于0');
+        return;
+    }
+    
+    // 发送AJAX请求更新价格
+    fetch('/analysis/update_price', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `stock_code=${stockCode}&current_price=${currentPrice}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 重新计算收益
+            calculateProfit(stockCode, index);
+            // 显示成功消息
+            showMessage('success', data.message);
+        } else {
+            showMessage('error', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('error', '更新失败，请重试');
+    });
+}
+
+function calculateProfit(stockCode, index) {
+    const currentPrice = parseFloat(document.getElementById('price_' + index).value) || 0;
+    
+    // 从profit_data中获取持股数量（这里需要从后端传递数据）
+    // 暂时使用固定值演示
+    const totalQuantity = 100; // 这里应该从后端获取实际持股数量
+    const totalCost = 1005; // 这里应该从后端获取实际总成本
+    
+    const marketValue = currentPrice * totalQuantity;
+    const profitLoss = marketValue - totalCost;
+    const profitRate = totalCost > 0 ? (profitLoss / totalCost) * 100 : 0;
+    
+    // 更新显示
+    document.getElementById('market_value_' + index).textContent = '¥' + marketValue.toFixed(2);
+    document.getElementById('profit_loss_' + index).textContent = '¥' + profitLoss.toFixed(2);
+    document.getElementById('profit_rate_' + index).textContent = profitRate.toFixed(2) + '%';
+    
+    // 更新颜色
+    const profitLossElement = document.getElementById('profit_loss_' + index);
+    const profitRateElement = document.getElementById('profit_rate_' + index);
+    
+    if (profitLoss >= 0) {
+        profitLossElement.className = 'text-success';
+        profitRateElement.className = 'text-success';
+    } else {
+        profitLossElement.className = 'text-danger';
+        profitRateElement.className = 'text-danger';
+    }
+}
+
+function showMessage(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // 在页面顶部显示消息
+    const container = document.querySelector('.main-content');
+    container.insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // 3秒后自动消失
+    setTimeout(() => {
+        const alert = container.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 3000);
+}
+
+function showDetails(stockCode, records) {
+    document.getElementById('modalStockCode').textContent = stockCode;
+    
+    const tbody = document.getElementById('modalTableBody');
+    tbody.innerHTML = '';
+    
+    records.forEach(function(record) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${new Date(record.buy_date).toLocaleDateString()}</td>
+            <td>¥${parseFloat(record.amount).toFixed(2)}</td>
+            <td>${parseFloat(record.quantity).toFixed(4)}</td>
+            <td>¥${parseFloat(record.price).toFixed(4)}</td>
+            <td>¥${parseFloat(record.fee).toFixed(2)}</td>
+            <td>${record.notes || '-'}</td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    new bootstrap.Modal(document.getElementById('detailsModal')).show();
+}
+</script>
+{% endblock %}
