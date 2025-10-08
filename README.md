@@ -1,8 +1,92 @@
 # 定投管理系统
 
-一个基于 Python Flask 的股票定投管理工具，帮助用户管理定投计划、记录交易历史、分析投资成本与收益。
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Flask](https://img.shields.io/badge/Flask-2.3+-green.svg)](https://flask.palletsprojects.com/)
 
-## 技术栈
+一个基于 Python Flask 的智能定投管理工具，帮助投资者管理定投计划、记录交易历史、分析投资成本与收益。
+
+## ✨ 主要特性
+
+- 🎯 **智能定投提醒** - 支持按月/按周定投，精确到分钟的提醒时间
+- 📊 **投资标的管理** - 支持A股、美股、港股、加密货币等多种标的
+- 📝 **交易记录管理** - 完整的定投记录，支持手续费和备注
+- 📈 **成本分析** - 自动计算平均成本、总投入、交易次数
+- 💰 **收益分析** - 实时盈亏计算，支持收益率分析
+- 🤖 **企业微信集成** - 自动发送定投提醒到企业微信群
+- 🔒 **数据安全** - 用户数据隔离，本地存储，保护隐私
+- ⚙️ **灵活配置** - 支持环境变量配置，易于部署
+
+## 🚀 快速开始
+
+### 环境要求
+
+- Python 3.10 或更高版本
+- pip 包管理器
+
+### 安装步骤
+
+1. **克隆项目**
+   ```bash
+   git clone https://github.com/your-username/drip_invest.git
+   cd drip_invest
+   ```
+
+2. **创建虚拟环境**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Linux/Mac
+   # 或 venv\Scripts\activate  # Windows
+   ```
+
+3. **安装依赖**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **配置环境变量**
+   ```bash
+   cp env_example .env
+   # 编辑 .env 文件，根据需要修改配置
+   ```
+
+5. **启动应用**
+   ```bash
+   python main.py
+   ```
+
+6. **访问应用**
+   打开浏览器访问 `http://127.0.0.1:5006`
+
+### Docker部署（推荐）
+
+如果您熟悉Docker，可以使用以下命令快速部署：
+
+```bash
+# 使用Docker Compose
+docker-compose up -d
+
+# 或使用Docker命令
+docker build -t drip-invest .
+docker run -d -p 5006:5006 --name drip-invest drip-invest
+```
+
+访问 `http://localhost:5006` 即可使用应用。
+
+### 首次使用
+
+1. **注册账户** - 创建您的用户账户
+2. **配置通知** - 在个人设置中配置企业微信群机器人webhook
+3. **添加标的** - 在"标的管理"中添加您要定投的投资标的
+4. **设置提醒** - 在"定投提醒"中配置定投计划
+5. **记录交易** - 每次定投后添加交易记录
+6. **查看分析** - 在"成本分析"和"收益分析"中查看投资情况
+
+## 📸 功能截图
+
+> 💡 更多截图和详细说明请查看 [功能说明](USAGE.md)
+
+## 🛠️ 技术栈
 
 - **后端**: Python 3.10+ + Flask
 - **数据库**: SQLite + SQLAlchemy ORM
@@ -355,11 +439,59 @@ python main.py
 - 数据库文件默认存储在项目根目录下（`drip_invest.db`）
 - 使用绝对路径避免Flask自动创建instance目录
 
-## 后续扩展方向
+## ❓ 常见问题
 
-- 集成股票行情API获取实时价格
-- 添加更多技术指标分析
-- 支持多币种投资
-- 移动端适配
-- 数据导出功能
-- 投资策略回测
+### 安装和配置
+
+**Q: 如何修改端口？**
+A: 在 `.env` 文件中设置 `PORT=8080`，或使用环境变量 `PORT=8080 python main.py`
+
+**Q: 数据库文件在哪里？**
+A: 数据库文件 `drip_invest.db` 默认存储在项目根目录下
+
+**Q: 如何备份数据？**
+A: 直接复制 `drip_invest.db` 文件即可完成数据备份
+
+### 功能使用
+
+**Q: 如何配置企业微信通知？**
+A: 在个人设置页面输入企业微信群机器人的webhook URL
+
+**Q: 支持哪些投资标的？**
+A: 支持A股、美股、港股、加密货币等多种投资标的
+
+**Q: 价格精度支持几位小数？**
+A: 支持4位小数精度，适合加密货币等需要高精度的投资标的
+
+**Q: 定投提醒的时间如何设置？**
+A: 支持精确到分钟的提醒时间设置，如 09:30、18:00 等
+
+### 故障排除
+
+**Q: 应用启动失败怎么办？**
+A: 检查Python版本是否为3.10+，确保所有依赖已正确安装
+
+**Q: 企业微信通知收不到？**
+A: 检查webhook URL是否正确，确保群机器人已启用
+
+**Q: 数据丢失了怎么办？**
+A: 检查是否有 `drip_invest.db` 的备份文件，可以恢复数据
+
+## 📖 详细文档
+
+- [快速开始指南](QUICKSTART.md) - 5分钟快速部署指南
+- [功能说明](USAGE.md) - 详细的功能使用说明
+- [贡献指南](CONTRIBUTING.md) - 如何参与项目开发
+- [更新日志](CHANGELOG.md) - 版本更新记录
+
+## 🤝 贡献
+
+我们欢迎各种形式的贡献！请查看 [贡献指南](CONTRIBUTING.md) 了解如何参与项目开发。
+
+## 📄 许可证
+
+本项目采用 [MIT 许可证](LICENSE) 开源。
+
+## 🙏 致谢
+
+感谢所有为这个项目做出贡献的开发者！

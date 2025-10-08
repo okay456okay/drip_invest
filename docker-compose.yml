@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  drip-invest:
+    build: .
+    ports:
+      - "5006:5006"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=your-production-secret-key-change-this
+      - DATABASE_URL=sqlite:///drip_invest.db
+      - HOST=0.0.0.0
+      - PORT=5006
+      - DEBUG=False
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5006/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 可选：添加Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - drip-invest
+    restart: unless-stopped
+    profiles:
+      - nginx
