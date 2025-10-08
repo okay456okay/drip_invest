@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}标的管理 - 定投管理工具{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">标的管理</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('target.create') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-plus"></i> 添加标的
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 筛选表单 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="code" class="form-label">标的代码</label>
+                <input type="text" class="form-control" id="code" name="code" 
+                       value="{{ code }}" placeholder="输入标的代码">
+            </div>
+            <div class="col-md-4">
+                <label for="market" class="form-label">市场类型</label>
+                <select class="form-select" id="market" name="market">
+                    <option value="">全部</option>
+                    <option value="A股" {% if market == 'A股' %}selected{% endif %}>A股</option>
+                    <option value="美股" {% if market == '美股' %}selected{% endif %}>美股</option>
+                    <option value="港股" {% if market == '港股' %}selected{% endif %}>港股</option>
+                    <option value="加密货币" {% if market == '加密货币' %}selected{% endif %}>加密货币</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> 筛选
+                    </button>
+                    <a href="{{ url_for('target.index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i> 重置
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 标的列表 -->
+<div class="card">
+    <div class="card-body">
+        {% if targets.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>标的代码</th>
+                        <th>标的名称</th>
+                        <th>当前价格</th>
+                        <th>价格日期</th>
+                        <th>市场类型</th>
+                        <th>行业板块</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for target in targets.items %}
+                    <tr>
+                        <td>
+                            <strong>{{ target.code }}</strong>
+                        </td>
+                        <td>{{ target.name }}</td>
+                        <td>
+                            <div class="input-group input-group-sm" style="width: 120px;">
+                                <span class="input-group-text">¥</span>
+                                <input type="number" class="form-control" 
+                                       id="price_{{ target.id }}" 
+                                       value="{{ target.current_price }}" 
+                                       step="0.0001" min="0"
+                                       onchange="updatePrice({{ target.id }}, this.value)"
+                                       style="font-size: 0.875rem;">
+                            </div>
+                        </td>
+                        <td>{{ target.price_date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if target.market %}
+                                <span class="badge bg-info">{{ target.market }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if target.sector %}
+                                <span class="badge bg-secondary">{{ target.sector }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if target.is_active %}
+                                <span class="badge bg-success">启用</span>
+                            {% else %}
+                                <span class="badge bg-secondary">禁用</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ url_for('target.edit', target_id=target.id) }}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('target.toggle', target_id=target.id) }}" 
+                                      style="display: inline;">
+                                    <button type="submit" class="btn btn-outline-warning" 
+                                            onclick="return confirm('确定要切换该标的的启用状态吗？')">
+                                        <i class="bi bi-toggle-{% if target.is_active %}on{% else %}off{% endif %}"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('target.delete', target_id=target.id) }}" 
+                                      style="display: inline;">
+                                    <button type="submit" class="btn btn-outline-danger" 
+                                            onclick="return confirm('确定要删除该标的吗？删除后相关的定投提醒和记录也会被删除！')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页 -->
+        {% if targets.pages > 1 %}
+        <nav aria-label="分页导航">
+            <ul class="pagination justify-content-center">
+                {% if targets.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('target.index', page=targets.prev_num, code=code, market=market) }}">
+                        上一页
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in targets.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != targets.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('target.index', page=page_num, code=code, market=market) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if targets.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('target.index', page=targets.next_num, code=code, market=market) }}">
+                        下一页
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h4 class="text-muted mt-3">暂无标的记录</h4>
+            <p class="text-muted">点击上方"添加标的"按钮开始添加您的第一个投资标的</p>
+            <a href="{{ url_for('target.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus"></i> 添加标的
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updatePrice(targetId, newPrice) {
+    if (!newPrice || parseFloat(newPrice) <= 0) {
+        alert('价格必须大于0');
+        return;
+    }
+    
+    // 发送AJAX请求更新价格
+    fetch(`/target/${targetId}/update-price`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `current_price=${newPrice}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 显示成功消息
+            showMessage('success', data.message);
+            // 更新价格日期显示
+            if (data.price_date) {
+                const row = document.querySelector(`#price_${targetId}`).closest('tr');
+                const dateCell = row.querySelector('td:nth-child(4)');
+                dateCell.textContent = data.price_date;
+            }
+        } else {
+            showMessage('error', data.message);
+            // 恢复原价格
+            document.getElementById(`price_${targetId}`).value = data.original_price || newPrice;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('error', '更新失败，请重试');
+        // 恢复原价格
+        document.getElementById(`price_${targetId}`).value = newPrice;
+    });
+}
+
+function showMessage(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // 在页面顶部显示消息
+    const container = document.querySelector('.main-content');
+    if (container) {
+        container.insertAdjacentHTML('afterbegin', alertHtml);
+    } else {
+        // 如果没有找到容器，在body顶部显示
+        document.body.insertAdjacentHTML('afterbegin', alertHtml);
+    }
+    
+    // 3秒后自动消失
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 3000);
+}
+</script>
+{% endblock %}

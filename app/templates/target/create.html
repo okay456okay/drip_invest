@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}添加标的 - 定投管理工具{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">添加投资标的</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('target.index') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 返回列表
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">标的信息</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="code" class="form-label">标的代码 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="code" name="code" 
+                                   placeholder="如：000001、AAPL、00700" required>
+                            <div class="form-text">支持A股、美股、港股等代码格式</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">标的名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   placeholder="如：平安银行、苹果公司、腾讯控股" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="current_price" class="form-label">当前价格 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">¥</span>
+                                <input type="number" class="form-control" id="current_price" name="current_price" 
+                                       step="0.0001" min="0" placeholder="0.0000" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="price_date" class="form-label">价格日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="price_date" name="price_date" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="market" class="form-label">市场类型</label>
+                            <select class="form-select" id="market" name="market">
+                                <option value="">请选择</option>
+                                <option value="A股">A股</option>
+                                <option value="美股">美股</option>
+                                <option value="港股">港股</option>
+                                <option value="加密货币">加密货币</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sector" class="form-label">行业板块</label>
+                            <input type="text" class="form-control" id="sector" name="sector" 
+                                   placeholder="如：银行、科技、消费">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">备注</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                  placeholder="添加备注信息（可选）"></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('target.index') }}" class="btn btn-secondary me-md-2">取消</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i> 添加标的
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">填写说明</h6>
+            </div>
+            <div class="card-body">
+                <h6>标的代码格式：</h6>
+                <ul class="small">
+                    <li><strong>A股</strong>：6位数字，如 000001、600036</li>
+                    <li><strong>美股</strong>：字母组合，如 AAPL、MSFT</li>
+                    <li><strong>港股</strong>：5位数字，如 00700、00941</li>
+                    <li><strong>加密货币</strong>：字母组合，如 BTC、ETH、USDT</li>
+                </ul>
+                
+                <h6 class="mt-3">注意事项：</h6>
+                <ul class="small">
+                    <li>标的代码在同一用户下必须唯一</li>
+                    <li>价格建议使用最新市场价格</li>
+                    <li>添加后可在定投提醒和记录中选择</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

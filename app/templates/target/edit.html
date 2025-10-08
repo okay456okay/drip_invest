@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}编辑标的 - 定投管理工具{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">编辑投资标的</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('target.index') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 返回列表
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">标的信息</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="code" class="form-label">标的代码 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="code" name="code" 
+                                   value="{{ target.code }}" placeholder="如：000001、AAPL、00700" required>
+                            <div class="form-text">支持A股、美股、港股等代码格式</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">标的名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ target.name }}" placeholder="如：平安银行、苹果公司、腾讯控股" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="current_price" class="form-label">当前价格 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">¥</span>
+                                <input type="number" class="form-control" id="current_price" name="current_price" 
+                                       value="{{ target.current_price }}" step="0.0001" min="0" placeholder="0.0000" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="price_date" class="form-label">价格日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="price_date" name="price_date" 
+                                   value="{{ target.price_date.strftime('%Y-%m-%d') }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="market" class="form-label">市场类型</label>
+                            <select class="form-select" id="market" name="market">
+                                <option value="">请选择</option>
+                                <option value="A股" {% if target.market == 'A股' %}selected{% endif %}>A股</option>
+                                <option value="美股" {% if target.market == '美股' %}selected{% endif %}>美股</option>
+                                <option value="港股" {% if target.market == '港股' %}selected{% endif %}>港股</option>
+                                <option value="加密货币" {% if target.market == '加密货币' %}selected{% endif %}>加密货币</option>
+                                <option value="其他" {% if target.market == '其他' %}selected{% endif %}>其他</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sector" class="form-label">行业板块</label>
+                            <input type="text" class="form-control" id="sector" name="sector" 
+                                   value="{{ target.sector or '' }}" placeholder="如：银行、科技、消费">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">备注</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                  placeholder="添加备注信息（可选）">{{ target.notes or '' }}</textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('target.index') }}" class="btn btn-secondary me-md-2">取消</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i> 更新标的
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">标的信息</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row small">
+                    <dt class="col-sm-4">创建时间：</dt>
+                    <dd class="col-sm-8">{{ target.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+                    
+                    <dt class="col-sm-4">更新时间：</dt>
+                    <dd class="col-sm-8">{{ target.updated_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+                    
+                    <dt class="col-sm-4">状态：</dt>
+                    <dd class="col-sm-8">
+                        {% if target.is_active %}
+                            <span class="badge bg-success">启用</span>
+                        {% else %}
+                            <span class="badge bg-secondary">禁用</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+                
+                <div class="alert alert-warning small">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>注意：</strong>修改标的代码可能会影响相关的定投提醒和记录。
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
