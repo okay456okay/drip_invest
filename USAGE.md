@@ -5,22 +5,22 @@
 ### 1. 启动应用
 
 ```bash
-cd /Users/raymon/git/drip_invest
+python -m venv venv
 source venv/bin/activate
 python main.py
 ```
 
-应用将在 `http://localhost:5000` 启动。
+应用将在 `http://localhost:5006` 启动。
 
 ### 2. 注册账户
 
-1. 访问 `http://localhost:5000/auth/register`
+1. 访问 `http://localhost:5006/auth/register`
 2. 填写用户名、邮箱和密码
 3. 点击"注册"按钮
 
 ### 3. 登录系统
 
-1. 访问 `http://localhost:5000/auth/login`
+1. 访问 `http://localhost:5006/auth/login`
 2. 使用用户名/邮箱和密码登录
 
 ## 功能使用指南
