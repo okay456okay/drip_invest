@@ -217,18 +217,74 @@ drip_invest/
 
 ### 依赖安装
 ```bash
-pip install flask sqlalchemy python-dotenv
+pip install flask flask-sqlalchemy python-dotenv requests apscheduler
 ```
 
 ### 环境变量配置
-```env
-FLASK_APP=main.py
-FLASK_ENV=development
-SECRET_KEY=your-secret-key
-DATABASE_URL=sqlite:///drip_invest.db
+
+1. **复制环境变量模板**：
+```bash
+cp env_example .env
 ```
 
+2. **修改环境变量**：
+编辑 `.env` 文件，根据实际需要修改配置：
+
+```env
+# Flask 应用配置
+FLASK_APP=main.py
+FLASK_ENV=development
+SECRET_KEY=your-secret-key-here
+
+# 数据库配置
+DATABASE_URL=sqlite:///instance/drip_invest.db
+
+# 服务器配置
+HOST=127.0.0.1
+PORT=5000
+
+# 日志配置
+LOG_LEVEL=INFO
+
+# 定时任务配置
+SCHEDULER_TIMEZONE=Asia/Shanghai
+
+# 调试模式
+DEBUG=True
+```
+
+### 配置说明
+
+- **HOST**: 服务器监听地址，默认 `127.0.0.1`
+- **PORT**: 服务器端口，默认 `5000`
+- **SECRET_KEY**: Flask会话密钥，生产环境请使用强密码
+- **DATABASE_URL**: 数据库连接URL
+- **SCHEDULER_TIMEZONE**: 定时任务时区，默认 `Asia/Shanghai`
+- **DEBUG**: 调试模式，生产环境请设置为 `False`
+
 ## 使用说明
+
+### 启动应用
+
+1. **安装依赖**：
+```bash
+pip install -r requirements.txt
+```
+
+2. **配置环境变量**：
+```bash
+cp env_example .env
+# 编辑 .env 文件，修改相应配置
+```
+
+3. **启动服务**：
+```bash
+python main.py
+```
+
+应用将在 `http://127.0.0.1:5000` 启动（端口可通过环境变量 `PORT` 修改）
+
+### 功能使用
 
 1. **注册账户**: 创建用户账户
 2. **配置webhook**: 在用户设置中配置企业微信群机器人webhook

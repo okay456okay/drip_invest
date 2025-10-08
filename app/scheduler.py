@@ -98,7 +98,7 @@ class ReminderScheduler:
             jobstores=jobstores,
             executors=executors,
             job_defaults=job_defaults,
-            timezone='Asia/Shanghai'
+            timezone=app.config.get('SCHEDULER_TIMEZONE', 'Asia/Shanghai')
         )
         
         # 启动调度器
@@ -119,13 +119,15 @@ class ReminderScheduler:
             self.remove_reminder_job(reminder.id)
             
             # 构建cron表达式
+            timezone = self.app.config.get('SCHEDULER_TIMEZONE', 'Asia/Shanghai')
+            
             if reminder.frequency_type == 'monthly':
                 # 每月定投：每月指定日期的指定时间
                 trigger = CronTrigger(
                     day=reminder.frequency_value,
                     hour=int(reminder.reminder_time.split(':')[0]),
                     minute=int(reminder.reminder_time.split(':')[1]),
-                    timezone='Asia/Shanghai'
+                    timezone=timezone
                 )
             elif reminder.frequency_type == 'weekly':
                 # 每周定投：每周指定星期的指定时间
@@ -133,7 +135,7 @@ class ReminderScheduler:
                     day_of_week=reminder.frequency_value - 1,  # APScheduler中0=周一
                     hour=int(reminder.reminder_time.split(':')[0]),
                     minute=int(reminder.reminder_time.split(':')[1]),
-                    timezone='Asia/Shanghai'
+                    timezone=timezone
                 )
             else:
                 logger.error(f"不支持的频率类型: {reminder.frequency_type}")

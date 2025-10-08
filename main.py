@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session
 from app import create_app
 from app.models import db
+from config import Config
 
 app = create_app()
 
@@ -40,4 +41,9 @@ def dashboard():
                          active_reminders=active_reminders)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # 使用配置文件中的HOST和PORT
+    app.run(
+        host=Config.HOST,
+        port=Config.PORT,
+        debug=Config.DEBUG
+    )

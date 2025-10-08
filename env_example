@@ -1,0 +1,26 @@
+# 定投管理工具环境变量配置示例
+# 复制此文件为 .env 并修改相应的配置值
+
+# Flask 应用配置
+FLASK_APP=main.py
+FLASK_ENV=development
+SECRET_KEY=your-secret-key-here
+
+# 数据库配置
+DATABASE_URL=sqlite:///drip_invest.db
+
+# 服务器配置
+HOST=127.0.0.1
+PORT=5006
+
+# 日志配置
+LOG_LEVEL=INFO
+
+# 定时任务配置
+SCHEDULER_TIMEZONE=Asia/Shanghai
+
+# 企业微信配置（可选）
+# WECHAT_WEBHOOK_URL=https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=your-key
+
+# 其他配置
+DEBUG=True
